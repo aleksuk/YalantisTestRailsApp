@@ -1,5 +1,13 @@
 Rails.application.routes.draw do
-  resources :users
+  namespace :api do
+    resources :users, only: [:index, :show, :update, :create, :destroy]
+    resources :images, only: [:index, :create]
+
+    resource :sessions, only: [:create] do
+      delete '/', to: 'sessions#destroy'
+    end
+  end
+
   # The priority is based upon order of creation: first created -> highest priority.
   # See how all your routes lay out with "rake routes".
 
