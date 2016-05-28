@@ -78,9 +78,7 @@ RSpec.describe Session, type: :model do
   describe '#generate_token' do
     it 'should return token' do
       token = SecureRandom.uuid.gsub(/\-/,'')
-
       allow(subject).to receive(:generate_auth_token).and_return(token)
-      subject.save
 
       expect(subject.send(:generate_token)).to eq(token)
     end
