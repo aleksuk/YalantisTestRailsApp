@@ -29,7 +29,7 @@ class Session < ActiveRecord::Base
 
     def self.remove_old_sessions(user)
       user.sessions.each do |session|
-        session destroy! if session.created_at + MINUTES_20 < Date.new
+        session destroy! if session.created_at + MINUTES_20 < Date.current
       end
     end
 

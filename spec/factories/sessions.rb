@@ -1,6 +1,6 @@
 FactoryGirl.define do
   factory :session do
-    token "MyString"
+    token nil
     user nil
   end
 end
