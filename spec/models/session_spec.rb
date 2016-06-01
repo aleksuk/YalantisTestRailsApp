@@ -2,16 +2,13 @@ require 'rails_helper'
 
 RSpec.describe Session, type: :model do
 
-  before do
-    @user_email = Faker::Internet.email
-    @user_password = Faker::Internet.password
-
-    @user = create(:user, email: @user_email, password: @user_password)
-  end
+  let(:email) { 'mail@example.com' }
+  let(:password) { '12345678' }
+  let!(:user) { create(:user, email: email, password: password) }
 
   after do
+    user.destroy!
     Session.destroy_all
-    @user.destroy
   end
 
   subject { build(:session) }
@@ -28,7 +25,7 @@ RSpec.describe Session, type: :model do
 
   describe '#token' do
     it 'should generate secure token' do
-      subject.user = @user
+      subject.user = user
 
       expect(subject).to receive(:generate_token).and_call_original
       expect { subject.save }.to change { subject.token }
@@ -37,39 +34,53 @@ RSpec.describe Session, type: :model do
     end
   end
 
-  describe '#authenticate_by_credentials' do
-    it 'should raise UnauthorizedError' do
-      email = Faker::Internet.email
-      password = Faker::Internet.password
+  describe '.authenticate_by_credentials' do
+    context 'with valid credentials' do
+      it 'should create new session' do
+        expect(Session).to receive(:create_session).with(user)
 
-      expect { Session.authenticate_by_credentials(email, password) }.to raise_error(UnauthorizedError)
+        Session.authenticate_by_credentials(email, password)
+      end
     end
 
-    it 'should create new session' do
-      expect(Session).to receive(:create_session).with(@user)
+    context 'with invalid email' do
+      it 'should raise UnauthorizedError' do
+        password = 'wrong_password'
 
-      Session.authenticate_by_credentials(@user_email, @user_password)
-    end
-  end
-
-  describe '#authenticate_by_token' do
-    it 'should raise UnauthorizedError' do
-      token = SecureRandom.uuid.gsub(/\-/,'')
-
-      expect { Session.authenticate_by_token(token) }.to raise_error(UnauthorizedError)
+        expect { Session.authenticate_by_credentials(email, password) }.to raise_error(UnauthorizedError)
+      end
     end
 
-    it 'should return available session' do
-      user = create(:user)
-      session = create(:session, user: user)
+    context 'with invalid password' do
+      it 'should raise UnauthorizedError' do
+        email = 'wrong@email.com'
 
-      expect(Session.authenticate_by_token(session.token)).to eq(session)
+        expect { Session.authenticate_by_credentials(email, password) }.to raise_error(UnauthorizedError)
+      end
     end
   end
 
-  describe '#create_session' do
+  describe '.authenticate_by_token' do
+    context 'by valid token' do
+      it 'should return available session' do
+        session = create(:session, user: user)
+
+        expect(Session.authenticate_by_token(session.token)).to eq(session)
+      end
+    end
+
+    context 'by invalid token' do
+      it 'should raise UnauthorizedError' do
+        token = SecureRandom.uuid.gsub(/\-/,'')
+
+        expect { Session.authenticate_by_token(token) }.to raise_error(UnauthorizedError)
+      end
+    end
+  end
+
+  describe '.create_session' do
     it 'should return new session' do
-      session = Session.create_session(@user)
+      session = Session.create_session(user)
 
       expect(session).to be_kind_of Session
     end
