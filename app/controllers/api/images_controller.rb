@@ -10,7 +10,8 @@ class Api::ImagesController < Api::BaseController
 
   def create
     @image = current_user.images.create!(image_params)
-    render_response @image, 201
+    # render_response @image, 201
+    @task = task.create!(image: image)
   end
 
   def show

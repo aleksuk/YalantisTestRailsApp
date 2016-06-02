@@ -3,6 +3,7 @@ class User < ActiveRecord::Base
 
   has_many :sessions, dependent: :destroy
   has_many :images, dependent: :destroy
+  has_many :tasks, dependent: :destroy
 
   validates :name, presence: true,
                    length: { maximum: 50 }
