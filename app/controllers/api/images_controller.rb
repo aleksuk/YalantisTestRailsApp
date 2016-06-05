@@ -10,8 +10,11 @@ class Api::ImagesController < Api::BaseController
 
   def create
     @image = current_user.images.create!(image_params)
-    # render_response @image, 201
-    @task = task.create!(image: image)
+
+    task = current_user.tasks.create!(image: @image, params: task_params)
+    task.process_image(request.base_url)
+
+    render_response @image, 201
   end
 
   def show
@@ -33,6 +36,10 @@ class Api::ImagesController < Api::BaseController
   private
     def image_params
       params.permit(:attachment)
+    end
+
+    def task_params
+      params.permit(:params)
     end
 
     def page

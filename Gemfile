@@ -27,6 +27,8 @@ gem 'kaminari'
 gem 'dotenv-rails'
 gem 'active_model_serializers'
 gem 'bcrypt'
+gem 'http'
+
 
 # Use ActiveModel has_secure_password
 # gem 'bcrypt', '~> 3.1.7'
