@@ -1,0 +1,6 @@
+:queues:
+  - default
+  - [Tasks, 1]
+
+:limits:
+  Tasks: 5
