@@ -1,46 +1,34 @@
-require 'net/http'
-require 'uri'
-
 class Task < ActiveRecord::Base
   belongs_to :user
   belongs_to :image
 
   before_create :set_status_by_default
 
-  validates :image_id, presence: true
+  validates :image, presence: true
 
-  STASUSES = {
+  STATUSES = {
     'new' => 'progress',
     'progress' => 'done'
   }
 
-  PROCESSING_SERVER_HOST = 'http://localhost:9292'
+  def process_image(host, callback)
+    result = send_request host, callback
+    img_data = result['image']
 
-  def change_status(save = true)
-    status = STASUSES[self.status]
-
-    if status.nil?
-      set_error_status
-    else
-      self.status = status
-    end
-
-    self.save! if save
-  end
-
-  def process_image(host)
-    Thread.new do
+    if img_data
       change_status
-      response = send_request(host)
-
-      if response.code == 200
-        process_response(response)
-      else
-        set_error_status
-      end
-
+    else
+      set_error_status
       self.save!
     end
+  end
+
+  def process_result(result)
+    image.attachment.download! "#{ENV['PROCESSING_SERVER']}#{result['url']}"
+    image.save!
+
+    change_status
+    remove_remote_image result['id']
   end
 
   private
@@ -52,34 +40,31 @@ class Task < ActiveRecord::Base
       self.status = 'error'
     end
 
-    def send_request(host)
-      HTTP.post("#{PROCESSING_SERVER_HOST}/images", form: {
-        picture: URI.parse("#{host}#{image.attachment.url}"),
-        effect: 'negate'
-      })
-    end
+    def change_status(save = true)
+      status = STATUSES[self.status]
 
-    def process_response(response)
-      result = JSON.parse(response.to_s)
-      image_url = result.dig('image', 'url')
-
-      update_image(image_url)
-
-      self.change_status
-      # self.remove_image_from_processing_server(result.dig('image', 'id'))
-    end
-
-    def update_image(image_url)
-      # TODO: Image isn't updated in the first time
-      image.update!(remote_attachment_url: "#{PROCESSING_SERVER_HOST}#{image_url}")
-      image.remote_attachment_url = "#{PROCESSING_SERVER_HOST}#{image_url}"
-      image.save!
-    end
-
-    def remove_image_from_processing_server(image_id)
-      Thread.new do
-        HTTP.delete("#{PROCESSING_SERVER_HOST}/images/#{image_id}").to_s
+      if status.nil?
+        set_error_status
+      else
+        self.status = status
       end
+
+      self.save! if save
+    end
+
+    def send_request(host, callback)
+      request_ctrl = RequestsController.new host: ENV['PROCESSING_SERVER']
+
+      request_params = {
+        picture: URI.parse("#{host}#{image.attachment.url}"),
+        callback: callback
+      }.merge!(JSON.parse(self.params))
+
+      request_ctrl.post('/images', request_params)
+    end
+
+    def remove_remote_image(id)
+      RequestsController.new(host: ENV['PROCESSING_SERVER']).delete("/images/#{id}")
     end
 
 end

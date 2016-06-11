@@ -39,4 +39,14 @@ class Api::BaseController < ApplicationController
       render json: data, status: status
     end
 
+    def get_json(string)
+      begin
+        result = JSON.parse(string)
+      rescue
+        result = {}
+      end
+
+      result
+    end
+
 end

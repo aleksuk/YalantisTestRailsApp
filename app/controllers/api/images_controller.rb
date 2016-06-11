@@ -11,9 +11,6 @@ class Api::ImagesController < Api::BaseController
   def create
     @image = current_user.images.create!(image_params)
 
-    task = current_user.tasks.create!(image: @image, params: task_params)
-    task.process_image(request.base_url)
-
     render_response @image, 201
   end
 

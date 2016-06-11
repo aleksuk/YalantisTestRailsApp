@@ -28,6 +28,9 @@ gem 'dotenv-rails'
 gem 'active_model_serializers'
 gem 'bcrypt'
 gem 'http'
+gem 'sidekiq'
+gem 'sidekiq-limit_fetch'
+gem 'sinatra', :require => nil
 
 
 # Use ActiveModel has_secure_password

@@ -1,12 +1,17 @@
+require 'sidekiq/web'
+
 Rails.application.routes.draw do
   namespace :api do
     resources :users, only: [:index, :show, :update, :create, :destroy]
     resources :images, only: [:index, :show, :update, :create, :destroy]
+    resources :tasks, only: [:create, :update]
 
     resource :sessions, only: [:create] do
       delete '/', to: 'sessions#destroy'
     end
   end
+
+  mount Sidekiq::Web => '/sidekiq'
 
   # The priority is based upon order of creation: first created -> highest priority.
   # See how all your routes lay out with "rake routes".
