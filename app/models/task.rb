@@ -24,11 +24,22 @@ class Task < ActiveRecord::Base
   end
 
   def process_result(result)
-    image.attachment.download! "#{ENV['PROCESSING_SERVER']}#{result['url']}"
+    data = get_json(result)
+
+    image.attachment.download! "#{ENV['PROCESSING_SERVER']}#{data['url']}"
     image.save!
 
     change_status
-    remove_remote_image result['id']
+    remove_remote_image data['id']
+  end
+
+  def processing_params=(value)
+    if value.is_a?(Hash)
+      self.params = value.to_json
+    else
+      value = {}
+      self.params = value.to_json
+    end
   end
 
   private
@@ -65,6 +76,16 @@ class Task < ActiveRecord::Base
 
     def remove_remote_image(id)
       RequestsController.new(host: ENV['PROCESSING_SERVER']).delete("/images/#{id}")
+    end
+
+    def get_json(string)
+      begin
+        result = JSON.parse(string)
+      rescue
+        raise ParseError
+      end
+
+      result
     end
 
 end

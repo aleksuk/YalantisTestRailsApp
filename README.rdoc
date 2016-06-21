@@ -1,5 +1,9 @@
 == README
 
+Before running server, run sidekiq from console
+
+`sidekiq`
+
 This README would normally document whatever steps are necessary to get the
 application up and running.
 

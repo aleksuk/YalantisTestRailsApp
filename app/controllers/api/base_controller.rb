@@ -8,6 +8,10 @@ class Api::BaseController < ApplicationController
     render_error({ message: 'Invalid session' }, 401)
   end
 
+  rescue_from ParseError do |e|
+    render_error({ message: 'Invalid request data' }, 401)
+  end
+
   rescue_from ActiveRecord::RecordNotFound do |e|
     render_error({ message: 'Not found' }, 404)
   end
@@ -37,16 +41,6 @@ class Api::BaseController < ApplicationController
 
     def render_json(data, status)
       render json: data, status: status
-    end
-
-    def get_json(string)
-      begin
-        result = JSON.parse(string)
-      rescue
-        result = {}
-      end
-
-      result
     end
 
 end
