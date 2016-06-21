@@ -2,7 +2,7 @@
 
 Before running server, run sidekiq from console
 
-`sidekiq`
+<tt>sidekiq</tt>
 
 This README would normally document whatever steps are necessary to get the
 application up and running.
